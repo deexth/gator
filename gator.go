@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/deexth/gator/internal/database"
+	"github.com/deexth/gator/rss"
 	"github.com/google/uuid"
 )
 
@@ -61,6 +62,45 @@ func handleLogin(s *state, cmd command) error {
 	}
 
 	fmt.Println("user logged in successfully")
+
+	return nil
+}
+
+func handleListUsers(s *state, cmd command) error {
+	allUsers, err := s.db.GetUsers(s.ctx)
+	if err != nil {
+		return fmt.Errorf("issue getting users list: %v", err)
+	}
+
+	for _, user := range allUsers {
+		if s.conf.UserName == user.Name {
+			fmt.Printf("* %s (current)\n", user.Name)
+		} else {
+			fmt.Printf("* %s\n", user.Name)
+		}
+	}
+
+	return nil
+}
+
+func handleAgg(s *state, cmd command) error {
+	url := "https://www.wagslane.dev/index.xml"
+	feed, err := rss.FetchFeed(s.ctx, url)
+	if err != nil {
+		return fmt.Errorf("an issue occured while fetching the feed at %s: %v", url, err)
+	}
+
+	fmt.Printf("Below is the feed at %s: %v\n", url, feed)
+
+	return nil
+}
+
+func handleReset(s *state, cmd command) error {
+	if err := s.db.ResetDb(s.ctx); err != nil {
+		return errors.New("issue reseting db")
+	}
+
+	fmt.Println("Database reset successfully!")
 
 	return nil
 }

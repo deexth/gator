@@ -28,9 +28,7 @@ func main() {
 		conf: &conf,
 	}
 
-	cmds := commands{
-		cmds: make(map[string]func(*state, command) error),
-	}
+	cmds := loadCommands()
 
 	cmdLineArgs := os.Args
 	if len(cmdLineArgs) < 2 {
@@ -40,6 +38,10 @@ func main() {
 	cmd := command{
 		name: cmdLineArgs[1],
 		args: cmdLineArgs[2:],
+	}
+
+	if _, ok := cmds.cmds[cmd.name]; !ok {
+		log.Fatalf("no command %v for gator", cmd.name)
 	}
 
 	db, err := sql.Open("postgres", s.conf.DBURL)
@@ -52,9 +54,6 @@ func main() {
 
 	s.db = dbQueries
 	s.ctx = context.Background()
-
-	cmds.register(cmd.name, handleLogin)
-	cmds.register(cmd.name, handleRegister)
 
 	if err := cmds.run(&s, cmd); err != nil {
 		log.Fatal(err)
