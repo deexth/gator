@@ -95,6 +95,59 @@ func handleAgg(s *state, cmd command) error {
 	return nil
 }
 
+func handleAddFeed(s *state, cmd command) error {
+	if len(cmd.args) < 2 {
+		return errors.New("usage: addfeed <name> <url>")
+	}
+
+	user, err := s.db.GetUser(s.ctx, s.conf.UserName)
+	if err != nil {
+		return fmt.Errorf("user %s might not be registered: %v", s.conf.UserName, err)
+	}
+
+	params := database.AddFeedParams{
+		ID:     uuid.New(),
+		Name:   cmd.args[0],
+		Url:    cmd.args[1],
+		UserID: user.ID,
+	}
+
+	_, err = s.db.AddFeed(s.ctx, params)
+	if err != nil {
+		return fmt.Errorf("issue while adding feed: %v", err)
+	}
+
+	return nil
+}
+
+func handleGetUsersAndFeeds(s *state, cmd command) error {
+	feeds, err := s.db.GetUsersAndFeeds(s.ctx)
+	if err != nil {
+		return errors.New("issue retrieving feeds")
+	}
+
+	for _, f := range feeds {
+		fmt.Printf(". %s\n", f.FeedName)
+		fmt.Printf(". %s\n", f.Url)
+		fmt.Printf(". %s\n", f.Username)
+	}
+
+	return nil
+}
+
+func handleFeeds(s *state, cmd command) error {
+	feeds, err := s.db.GetFeeds(s.ctx)
+	if err != nil {
+		return errors.New("issue retrieving feeds")
+	}
+
+	for _, f := range feeds {
+		fmt.Printf("- %s: %s", f.Name, f.Url)
+	}
+
+	return nil
+}
+
 func handleReset(s *state, cmd command) error {
 	if err := s.db.ResetDb(s.ctx); err != nil {
 		return errors.New("issue reseting db")

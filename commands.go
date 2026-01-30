@@ -34,6 +34,9 @@ func loadCommands() commands {
 			"reset":    handleReset,
 			"users":    handleListUsers,
 			"agg":      handleAgg,
+			"addfeed":  handleAddFeed,
+			"feeds":    handleGetUsersAndFeeds,
+			"allfeeds": handleFeeds,
 		},
 	}
 }
@@ -49,28 +52,43 @@ func getCommandsHelp() map[string]struct {
 	}{
 		"login": {
 			name:        "login",
-			description: "used to login existing user, otherwise will result in an error.",
+			description: "login command can be used to login a registered user, otherwise will result in an error.",
 			usage:       "usage: login <name>",
 		},
 		"register": {
 			name:        "register",
-			description: "register can be used to create a new user. It will result into an error if the user already exists.",
+			description: "register command can be used to create a new user. It will result into an error if the user already exists.",
 			usage:       "usage: register <name>",
 		},
 		"reset": {
 			name:        "reset",
-			description: "reset can be used to reset the database to a blank state.",
+			description: "reset command can be used to reset the database to a blank state.",
 			usage:       "usage: reset",
 		},
 		"users": {
 			name:        "users",
-			description: "users, is used to list all users registered in gator. The currently logged in user will have a (current) flag after the name",
+			description: "users command is used to list all users registered in gator. The currently logged in user will have a (current) flag after the name",
 			usage:       "usage: users",
 		},
 		"agg": {
 			name:        "agg",
-			description: "agg is used to fetch feed for an rss url",
+			description: "agg command is used to fetch feed for an rss url",
 			usage:       "usage: agg",
+		},
+		"addfeed": {
+			name:        "addfeed",
+			description: "addfeed command can be used to create a feed",
+			usage:       "usage: addfeed <name> <url>",
+		},
+		"feeds": {
+			name:        "feeds",
+			description: "feeds command can be used to get all feeds and their owners",
+			usage:       "usage: feeds",
+		},
+		"allfeeds": {
+			name:        "allfeeds",
+			description: "allfeeds command can be used to get all feeds and their owners",
+			usage:       "usage: allfeeds",
 		},
 	}
 
