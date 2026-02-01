@@ -29,14 +29,16 @@ func (c *commands) run(s *state, cmd command) error {
 func loadCommands() commands {
 	return commands{
 		cmds: map[string]func(*state, command) error{
-			"login":    handleLogin,
-			"register": handleRegister,
-			"reset":    handleReset,
-			"users":    handleListUsers,
-			"agg":      handleAgg,
-			"addfeed":  handleAddFeed,
-			"feeds":    handleGetUsersAndFeeds,
-			"allfeeds": handleFeeds,
+			"login":     handleLogin,
+			"register":  handleRegister,
+			"reset":     handleReset,
+			"users":     handleListUsers,
+			"agg":       handleAgg,
+			"addfeed":   handleAddFeed,
+			"feeds":     handleGetUsersAndFeeds,
+			"allfeeds":  handleFeeds,
+			"follow":    handleFollow,
+			"following": handleFollowing,
 		},
 	}
 }
@@ -89,6 +91,16 @@ func getCommandsHelp() map[string]struct {
 			name:        "allfeeds",
 			description: "allfeeds command can be used to get all feeds and their owners",
 			usage:       "usage: allfeeds",
+		},
+		"follow": {
+			name:        "follow",
+			description: "follow command can be used to follow  a feed",
+			usage:       "usage: follow <url>",
+		},
+		"following": {
+			name:        "following",
+			description: "following command can be used list feeds followed by a user",
+			usage:       "usage: following",
 		},
 	}
 

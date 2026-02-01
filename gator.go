@@ -11,7 +11,7 @@ import (
 
 func checkArgs(args []string) (string, error) {
 	if len(args) == 0 {
-		return "", errors.New("usage: command <name>")
+		return "", errors.New("usage: command <argument>")
 	}
 
 	return args[0], nil
@@ -100,7 +100,7 @@ func handleAddFeed(s *state, cmd command) error {
 		return errors.New("usage: addfeed <name> <url>")
 	}
 
-	user, err := s.db.GetUser(s.ctx, s.conf.UserName)
+	_, err := s.db.GetUser(s.ctx, s.conf.UserName)
 	if err != nil {
 		return fmt.Errorf("user %s might not be registered: %v", s.conf.UserName, err)
 	}
@@ -109,7 +109,8 @@ func handleAddFeed(s *state, cmd command) error {
 		ID:     uuid.New(),
 		Name:   cmd.args[0],
 		Url:    cmd.args[1],
-		UserID: user.ID,
+		Name_2: s.conf.UserName,
+		ID_2:   uuid.New(),
 	}
 
 	_, err = s.db.AddFeed(s.ctx, params)
@@ -144,6 +145,40 @@ func handleFeeds(s *state, cmd command) error {
 	for _, f := range feeds {
 		fmt.Printf("- %s: %s", f.Name, f.Url)
 	}
+
+	return nil
+}
+
+func handleFollow(s *state, cmd command) error {
+	url, err := checkArgs(cmd.args)
+	if err != nil {
+		return err
+	}
+
+	feed, err := s.db.CreateFeedFollow(s.ctx, database.CreateFeedFollowParams{
+		ID:   uuid.New(),
+		Name: s.conf.UserName,
+		Url:  url,
+	})
+	if err != nil {
+		return fmt.Errorf("issue following feed: %s", url)
+	}
+
+	fmt.Printf("%s now followed by %s", feed.FeedName, feed.UserName)
+
+	return nil
+}
+
+func handleFollowing(s *state, cmd command) error {
+	feeds, err := s.db.GetFeedFollowsForUser(s.ctx, s.conf.UserName)
+	if err != nil {
+		return fmt.Errorf("issue retrieving feeds followed by %s", s.conf.UserName)
+	}
+
+	for _, feed := range feeds {
+		fmt.Printf(". %s\n", feed)
+	}
+	fmt.Printf(". %s", s.conf.UserName)
 
 	return nil
 }

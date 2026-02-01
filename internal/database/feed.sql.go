@@ -13,35 +13,71 @@ import (
 )
 
 const addFeed = `-- name: AddFeed :one
-INSERT INTO feeds (
-    id,
-    name,
-    url,
-    user_id
-) VALUES (
-    $1,
-    $2,
-    $3,
-    $4
+WITH new_feed AS (
+    INSERT INTO feeds (
+        id,
+        name,
+        url,
+        user_id
+    )
+    SELECT
+        $1,
+        $2,
+        $3,
+        u.id
+    FROM users u
+    WHERE u.name = $4
+    RETURNING id, created_at, updated_at, name, url, user_id
+),
+new_follow AS (
+    INSERT INTO feed_follows (
+        id,
+        user_id,
+        feed_id
+    )
+    SELECT
+        $5,
+        new_feed.user_id,
+        new_feed.id
+    FROM new_feed
+    ON CONFLICT (user_id, feed_id)
+    DO UPDATE SET user_id = EXCLUDED.user_id
+    RETURNING id AS feed_follow_id
 )
-RETURNING id, created_at, updated_at, name, url, user_id
+SELECT
+    new_feed.id, new_feed.created_at, new_feed.updated_at, new_feed.name, new_feed.url, new_feed.user_id,
+    new_follow.feed_follow_id
+FROM new_feed
+LEFT JOIN new_follow ON true
 `
 
 type AddFeedParams struct {
 	ID     uuid.UUID
 	Name   string
 	Url    string
-	UserID uuid.UUID
+	Name_2 string
+	ID_2   uuid.UUID
 }
 
-func (q *Queries) AddFeed(ctx context.Context, arg AddFeedParams) (Feed, error) {
+type AddFeedRow struct {
+	ID           uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Name         string
+	Url          string
+	UserID       uuid.UUID
+	FeedFollowID uuid.NullUUID
+}
+
+func (q *Queries) AddFeed(ctx context.Context, arg AddFeedParams) (AddFeedRow, error) {
 	row := q.db.QueryRowContext(ctx, addFeed,
 		arg.ID,
 		arg.Name,
 		arg.Url,
-		arg.UserID,
+		arg.Name_2,
+		arg.ID_2,
 	)
-	var i Feed
+	var i AddFeedRow
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedAt,
@@ -49,6 +85,7 @@ func (q *Queries) AddFeed(ctx context.Context, arg AddFeedParams) (Feed, error) 
 		&i.Name,
 		&i.Url,
 		&i.UserID,
+		&i.FeedFollowID,
 	)
 	return i, err
 }
