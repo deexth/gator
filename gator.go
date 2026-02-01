@@ -170,10 +170,31 @@ func handleFollowing(s *state, cmd command, user database.User) error {
 		return fmt.Errorf("issue retrieving feeds followed by %s", user.Name)
 	}
 
+	if len(feeds) == 0 {
+		fmt.Print("Looks like you don't follow any feeds yet")
+		return nil
+	}
+
 	for _, feed := range feeds {
 		fmt.Printf(". %s\n", feed)
 	}
-	fmt.Printf(". %s", user.Name)
+
+	return nil
+}
+
+func handleUnfollowFeed(s *state, cmd command, user database.User) error {
+	url, err := checkArgs(cmd.args)
+	if err != nil {
+		return err
+	}
+
+	err = s.db.UnfollowFeed(s.ctx, database.UnfollowFeedParams{
+		Name: user.Name,
+		Url:  url,
+	})
+	if err != nil {
+		return fmt.Errorf("issue trying to unfollow %s: %v", url, err)
+	}
 
 	return nil
 }

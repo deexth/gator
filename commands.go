@@ -41,6 +41,7 @@ func loadCommands() commands {
 			"allfeeds":  handleFeeds,
 			"follow":    middlewareLoggedIn(handleFollow),
 			"following": middlewareLoggedIn(handleFollowing),
+			"unfollow":  middlewareLoggedIn(handleUnfollowFeed),
 		},
 	}
 }
@@ -103,6 +104,11 @@ func getCommandsHelp() map[string]struct {
 			name:        "following",
 			description: "following command can be used list feeds followed by a user",
 			usage:       "usage: following",
+		},
+		"unfollow": {
+			name:        "unfollow",
+			description: "unfollow command can be used to unfollow a feed",
+			usage:       "usage: unfollow <url>",
 		},
 	}
 
