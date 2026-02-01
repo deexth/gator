@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+
+	"github.com/deexth/gator/internal/database"
 )
 
 type command struct {
@@ -34,11 +36,11 @@ func loadCommands() commands {
 			"reset":     handleReset,
 			"users":     handleListUsers,
 			"agg":       handleAgg,
-			"addfeed":   handleAddFeed,
+			"addfeed":   middlewareLoggedIn(handleAddFeed),
 			"feeds":     handleGetUsersAndFeeds,
 			"allfeeds":  handleFeeds,
-			"follow":    handleFollow,
-			"following": handleFollowing,
+			"follow":    middlewareLoggedIn(handleFollow),
+			"following": middlewareLoggedIn(handleFollowing),
 		},
 	}
 }
@@ -105,4 +107,15 @@ func getCommandsHelp() map[string]struct {
 	}
 
 	return cmdStruct
+}
+
+func middlewareLoggedIn(handler func(*state, command, database.User) error) func(*state, command) error {
+	return func(s *state, c command) error {
+		user, err := s.db.GetUser(s.ctx, s.conf.UserName)
+		if err != nil {
+			return errors.New("user might not be logged in or is not registered")
+		}
+
+		return handler(s, c, user)
+	}
 }

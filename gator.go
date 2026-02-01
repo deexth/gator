@@ -95,25 +95,20 @@ func handleAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handleAddFeed(s *state, cmd command) error {
+func handleAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 2 {
 		return errors.New("usage: addfeed <name> <url>")
-	}
-
-	_, err := s.db.GetUser(s.ctx, s.conf.UserName)
-	if err != nil {
-		return fmt.Errorf("user %s might not be registered: %v", s.conf.UserName, err)
 	}
 
 	params := database.AddFeedParams{
 		ID:     uuid.New(),
 		Name:   cmd.args[0],
 		Url:    cmd.args[1],
-		Name_2: s.conf.UserName,
+		Name_2: user.Name,
 		ID_2:   uuid.New(),
 	}
 
-	_, err = s.db.AddFeed(s.ctx, params)
+	_, err := s.db.AddFeed(s.ctx, params)
 	if err != nil {
 		return fmt.Errorf("issue while adding feed: %v", err)
 	}
@@ -149,7 +144,7 @@ func handleFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handleFollow(s *state, cmd command) error {
+func handleFollow(s *state, cmd command, user database.User) error {
 	url, err := checkArgs(cmd.args)
 	if err != nil {
 		return err
@@ -157,7 +152,7 @@ func handleFollow(s *state, cmd command) error {
 
 	feed, err := s.db.CreateFeedFollow(s.ctx, database.CreateFeedFollowParams{
 		ID:   uuid.New(),
-		Name: s.conf.UserName,
+		Name: user.Name,
 		Url:  url,
 	})
 	if err != nil {
@@ -169,16 +164,16 @@ func handleFollow(s *state, cmd command) error {
 	return nil
 }
 
-func handleFollowing(s *state, cmd command) error {
-	feeds, err := s.db.GetFeedFollowsForUser(s.ctx, s.conf.UserName)
+func handleFollowing(s *state, cmd command, user database.User) error {
+	feeds, err := s.db.GetFeedFollowsForUser(s.ctx, user.Name)
 	if err != nil {
-		return fmt.Errorf("issue retrieving feeds followed by %s", s.conf.UserName)
+		return fmt.Errorf("issue retrieving feeds followed by %s", user.Name)
 	}
 
 	for _, feed := range feeds {
 		fmt.Printf(". %s\n", feed)
 	}
-	fmt.Printf(". %s", s.conf.UserName)
+	fmt.Printf(". %s", user.Name)
 
 	return nil
 }
